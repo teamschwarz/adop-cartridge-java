@@ -10,22 +10,22 @@ def referenceAppGitUrl = "ssh://jenkins@gerrit:29418/${PROJECT_NAME}/" + referen
 def regressionTestGitUrl = "ssh://jenkins@gerrit:29418/${PROJECT_NAME}/" + regressionTestGitRepo
 
 // Jobs
-def buildAppJob = freeStyleJob(projectFolderName + "/Reference_Application_Build")
-def unitTestJob = freeStyleJob(projectFolderName + "/Reference_Application_Unit_Tests")
+def buildAppJob = freeStyleJob(projectFolderName + "/App_X_Build")
+def unitTestJob = freeStyleJob(projectFolderName + "/App_X_Unit_Tests")
 def codeAnalysisJob = freeStyleJob(projectFolderName + "/Reference_Application_Code_Analysis")
-def deployJob = freeStyleJob(projectFolderName + "/Reference_Application_Deploy")
-def regressionTestJob = freeStyleJob(projectFolderName + "/Reference_Application_Regression_Tests")
-def performanceTestJob = freeStyleJob(projectFolderName + "/Reference_Application_Performance_Tests")
-def deployJobToProdA = freeStyleJob(projectFolderName + "/Reference_Application_Deploy_ProdA")
-def deployJobToProdB = freeStyleJob(projectFolderName + "/Reference_Application_Deploy_ProdB")
+def deployJob = freeStyleJob(projectFolderName + "/App_X_Deploy")
+def regressionTestJob = freeStyleJob(projectFolderName + "/App_X_Regression_Tests")
+def performanceTestJob = freeStyleJob(projectFolderName + "/App_X_Performance_Tests")
+def deployJobToProdA = freeStyleJob(projectFolderName + "/App_X_Deploy_ProdA")
+def deployJobToProdB = freeStyleJob(projectFolderName + "/App_X_Deploy_ProdB")
 
 // Views
-def pipelineView = buildPipelineView(projectFolderName + "/Java_Reference_Application")
+def pipelineView = buildPipelineView(projectFolderName + "/Java_App_X_")
 
 pipelineView.with {
     title('Reference Application Pipeline')
     displayedBuilds(5)
-    selectedJob(projectFolderName + "/Reference_Application_Build")
+    selectedJob(projectFolderName + "/App_X_Build")
     showPipelineParameters()
     showPipelineDefinitionHeader()
     refreshFrequency(5)
@@ -73,7 +73,7 @@ buildAppJob.with {
     publishers {
         archiveArtifacts("**/*")
         downstreamParameterized {
-            trigger(projectFolderName + "/Reference_Application_Unit_Tests") {
+            trigger(projectFolderName + "/App_X_Unit_Tests") {
                 condition("UNSTABLE_OR_BETTER")
                 parameters {
                     predefinedProp("B", '${BUILD_NUMBER}')
@@ -88,7 +88,7 @@ unitTestJob.with {
     description("This job runs unit tests on Java Spring reference application.")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
     }
     wrappers {
         preBuildCleanup()
@@ -102,7 +102,7 @@ unitTestJob.with {
     }
     label("java8")
     steps {
-        copyArtifacts("Reference_Application_Build") {
+        copyArtifacts("App_X_Build") {
             buildSelector {
                 buildNumber('${B}')
             }
@@ -115,7 +115,7 @@ unitTestJob.with {
     publishers {
         archiveArtifacts("**/*")
         downstreamParameterized {
-            trigger(projectFolderName + "/Reference_Application_Code_Analysis") {
+            trigger(projectFolderName + "/App_X_Code_Analysis") {
                 condition("UNSTABLE_OR_BETTER")
                 parameters {
                     predefinedProp("B", '${B}')
@@ -131,7 +131,7 @@ codeAnalysisJob.with {
     description("This job runs code quality analysis for Java reference application using SonarQube.")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
         stringParam("UTB", '', "Unit Tests job build number")
     }
     environmentVariables {
@@ -147,7 +147,7 @@ codeAnalysisJob.with {
     }
     label("java8")
     steps {
-        copyArtifacts('Reference_Application_Unit_Tests') {
+        copyArtifacts('App_X_Unit_Tests') {
             buildSelector {
                 buildNumber('${UTB}')
             }
@@ -170,7 +170,7 @@ sonar.scm.enabled=false''')
     }
     publishers {
         downstreamParameterized {
-            trigger(projectFolderName + "/Reference_Application_Deploy") {
+            trigger(projectFolderName + "/App_X_Deploy") {
                 condition("UNSTABLE_OR_BETTER")
                 parameters {
                     predefinedProp("B", '${B}')
@@ -185,7 +185,7 @@ deployJob.with {
     description("This job deploys the java reference application to the CI environment")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
         stringParam("ENVIRONMENT_NAME", "CI", "Name of the environment.")
     }
     wrappers {
@@ -200,7 +200,7 @@ deployJob.with {
     }
     label("docker")
     steps {
-        copyArtifacts("Reference_Application_Build") {
+        copyArtifacts("App_X_Build") {
             buildSelector {
                 buildNumber('${B}')
                 includePatterns('target/petclinic.war')
@@ -231,7 +231,7 @@ deployJob.with {
     }
     publishers {
         downstreamParameterized {
-            trigger(projectFolderName + "/Reference_Application_Regression_Tests") {
+            trigger(projectFolderName + "/App_X_Regression_Tests") {
                 condition("UNSTABLE_OR_BETTER")
                 parameters {
                     predefinedProp("B", '${B}')
@@ -247,7 +247,7 @@ regressionTestJob.with {
     description("This job runs regression tests on deployed java application")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
         stringParam("ENVIRONMENT_NAME", "CI", "Name of the environment.")
     }
     scm {
@@ -287,7 +287,7 @@ regressionTestJob.with {
             |echo ZAP_PORT=$ZAP_PORT >> env.properties
             |
             |echo "Starting OWASP ZAP Intercepting Proxy"
-            |JOB_WORKSPACE_PATH="/var/lib/docker/volumes/jenkins_slave_home/_data/${PROJECT_NAME}/Reference_Application_Regression_Tests"
+            |JOB_WORKSPACE_PATH="/var/lib/docker/volumes/jenkins_slave_home/_data/${PROJECT_NAME}/App_X_Regression_Tests"
             |#JOB_WORKSPACE_PATH="$(docker inspect --format '{{ .Mounts.Networks.'"$DOCKER_NETWORK_NAME"'.IPAddress }}' ${CONTAINER_NAME} )/${JOB_NAME}"
             |echo JOB_WORKSPACE_PATH=$JOB_WORKSPACE_PATH >> env.properties
             |mkdir -p ${JOB_WORKSPACE_PATH}/owasp_zap_proxy/test-results
@@ -337,7 +337,7 @@ regressionTestJob.with {
     }
     publishers {
         downstreamParameterized {
-            trigger(projectFolderName + "/Reference_Application_Performance_Tests") {
+            trigger(projectFolderName + "/App_X_Performance_Tests") {
                 condition("UNSTABLE_OR_BETTER")
                 parameters {
                     predefinedProp("B", '${B}')
@@ -359,7 +359,7 @@ performanceTestJob.with {
     description("This job run the Jmeter test for the java reference application")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Regression_Tests", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Regression_Tests", "Parent build name")
         stringParam("ENVIRONMENT_NAME", "CI", "Name of the environment.")
     }
     wrappers {
@@ -375,7 +375,7 @@ performanceTestJob.with {
     }
     label("docker")
     steps {
-        copyArtifacts("Reference_Application_Build") {
+        copyArtifacts("App_X_Build") {
             buildSelector {
                 buildNumber('${B}')
             }
@@ -422,7 +422,7 @@ performanceTestJob.with {
                 reportFiles('petclinic_test_plan.html')
             }
         }
-        buildPipelineTrigger(projectFolderName + "/Reference_Application_Deploy_ProdA") {
+        buildPipelineTrigger(projectFolderName + "/App_X_Deploy_ProdA") {
             parameters {
                 predefinedProp("B", '${B}')
                 predefinedProp("PARENT_BUILD", '${PARENT_BUILD}')
@@ -440,7 +440,7 @@ deployJobToProdA.with {
     description("This job deploys the java reference application to the ProdA environment")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
         stringParam("ENVIRONMENT_NAME", "PRODA", "Name of the environment.")
     }
     wrappers {
@@ -455,7 +455,7 @@ deployJobToProdA.with {
     }
     label("docker")
     steps {
-        copyArtifacts("Reference_Application_Build") {
+        copyArtifacts("App_X_Build") {
             buildSelector {
                 buildNumber('${B}')
                 includePatterns('target/petclinic.war')
@@ -484,7 +484,7 @@ deployJobToProdA.with {
             |set -x'''.stripMargin())
     }
     publishers {
-        buildPipelineTrigger(projectFolderName + "/Reference_Application_Deploy_ProdB") {
+        buildPipelineTrigger(projectFolderName + "/App_X_Deploy_ProdB") {
             parameters {
                 predefinedProp("B", '${B}')
                 predefinedProp("PARENT_BUILD", '${PARENT_BUILD}')
@@ -498,7 +498,7 @@ deployJobToProdB.with {
     description("This job deploys the java reference application to the ProdA environment")
     parameters {
         stringParam("B", '', "Parent build number")
-        stringParam("PARENT_BUILD", "Reference_Application_Build", "Parent build name")
+        stringParam("PARENT_BUILD", "App_X_Build", "Parent build name")
         stringParam("ENVIRONMENT_NAME", "PRODB", "Name of the environment.")
     }
     wrappers {
@@ -513,7 +513,7 @@ deployJobToProdB.with {
     }
     label("docker")
     steps {
-        copyArtifacts("Reference_Application_Build") {
+        copyArtifacts("App_X_Build") {
             buildSelector {
                 buildNumber('${B}')
                 includePatterns('target/petclinic.war')
