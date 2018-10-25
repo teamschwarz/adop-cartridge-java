@@ -12,7 +12,7 @@ def regressionTestGitUrl = "ssh://jenkins@gerrit:29418/${PROJECT_NAME}/" + regre
 // Jobs
 def buildAppJob = freeStyleJob(projectFolderName + "/App_X_Build")
 def unitTestJob = freeStyleJob(projectFolderName + "/App_X_Unit_Tests")
-def codeAnalysisJob = freeStyleJob(projectFolderName + "/Reference_Application_Code_Analysis")
+def codeAnalysisJob = freeStyleJob(projectFolderName + "/App_X_Code_Analysis")
 def deployJob = freeStyleJob(projectFolderName + "/App_X_Deploy")
 def regressionTestJob = freeStyleJob(projectFolderName + "/App_X_Regression_Tests")
 def performanceTestJob = freeStyleJob(projectFolderName + "/App_X_Performance_Tests")
